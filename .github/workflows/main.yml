@@ -1,10 +1,34 @@
-name: Hello_job
-on: [push]
+name: Issue_job
+
+on:
+  issues:
+    types: [opened, reopened]
+
 jobs:
-  say-hello:
+  access_issue_info:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Greetings
-        run: echo "Hello, world"
+
+      - name: Set Issue Environment Variables
+        run: |
+          echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
+          echo "ISSUE_TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
+          echo "ISSUE_BODY=${{ github.event.issue.body }}" >> $GITHUB_ENV
+          echo "ISSUE_ASSIGNEES=${{ join(github.event.issue.assignees.*.login, ', ') }}" >> $GITHUB_ENV
+          echo "ISSUE_LABELS=${{ join(github.event.issue.labels.*.name, ', ') }}" >> $GITHUB_ENV
+
+      - name: Echo Issue Details
+        run: |
+          echo "Issue Number: $ISSUE_NUMBER"
+          echo "Issue Title: $ISSUE_TITLE"
+          echo "Issue Body: $ISSUE_BODY"
+          echo "Issue Assignees: $ISSUE_ASSIGNEES"
+          echo "Issue Labels: $ISSUE_LABELS"
+
+      - name: Fetch Issue Details from GitHub API
+        run: |
+          ISSUE_RESPONSE=$(curl -s https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER)
+          echo "Issue Information: $ISSUE_RESPONSE"
+
