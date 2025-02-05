@@ -11,15 +11,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set Issue Environment Variables
-        run: |
-          echo "ISSUE_NUMBER=${{ github.event.issue.number }}" >> $GITHUB_ENV
-          echo "ISSUE_TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
-          echo "ISSUE_BODY=${{ github.event.issue.body }}" >> $GITHUB_ENV
-          echo "ISSUE_ASSIGNEES=${{ join(github.event.issue.assignees.*.login, ', ') }}" >> $GITHUB_ENV
-          echo "ISSUE_LABELS=${{ join(github.event.issue.labels.*.name, ', ') }}" >> $GITHUB_ENV
-
       - name: Echo Issue Details
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_ASSIGNEES: ${{ join(github.event.issue.assignees.*.login, ', ') }}
+          ISSUE_LABELS: ${{ join(github.event.issue.labels.*.name, ', ') }}
         run: |
           echo "Issue Number: $ISSUE_NUMBER"
           echo "Issue Title: $ISSUE_TITLE"
@@ -28,7 +26,8 @@ jobs:
           echo "Issue Labels: $ISSUE_LABELS"
 
       - name: Fetch Issue Details from GitHub API
+        env:
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           ISSUE_RESPONSE=$(curl -s https://api.github.com/repos/${{ github.repository }}/issues/$ISSUE_NUMBER)
           echo "Issue Information: $ISSUE_RESPONSE"
-
