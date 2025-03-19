@@ -1,8 +1,3 @@
-#Steps to complete
-# run the script file to generate code based on the issue content.
-# Once the script has run, upload the generated files an artifact;
-# then, download and list the contents of the artifact in the workflow logs.
-
 name: Auto_Coder
 
 on:
