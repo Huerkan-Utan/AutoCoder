@@ -6,10 +6,11 @@ on:
 
 jobs:
   access_issue_info:
-    if: >-
-      github.event.action == 'opened' || 
-      github.event.action == 'reopened' || 
-      (github.event.action == 'labeled' && github.event.label.name == 'autocoder-bot')
+    if: contains(github.event.issue.labels.*.name, 'autocoder-bot')
+    #if: >-
+    #  github.event.action == 'opened' || 
+    #  github.event.action == 'reopened' || 
+    #  (github.event.action == 'labeled' && github.event.label.name == 'autocoder-bot')
     #if: ${{ (github.event.action == 'labeled' && github.event.label.name == 'autocoder-bot') || (github.event.issue.labels && contains(github.event.issue.labels.*.name, 'autocoder-bot')) }}
     runs-on: ubuntu-latest
     steps:
