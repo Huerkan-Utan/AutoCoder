@@ -48,6 +48,9 @@ jobs:
 
       - name: List Artifact Contents
         run: ls -R autocoder-artifact/
+
+      - name: Copy Generated Code
+        run: cp -R autocoder-artifact/* .
       
       - name: Configure Git
         run: |
