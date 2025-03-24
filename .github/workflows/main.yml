@@ -70,6 +70,9 @@ jobs:
           git commit -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
           git push origin autocoder-branch-${{ github.event.issue.number }}
       
+      - name: Debug - Final Git Status
+        run: git status
+      
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
