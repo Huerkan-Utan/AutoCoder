@@ -49,11 +49,6 @@ jobs:
       - name: List Artifact Contents
         run: ls -R autocoder-artifact/
 
-      - name: Clean Up Previously Generated Files
-        run: |
-          rm -f src/main.py || true
-          rm -rf autocoder-bot || true
-
       - name: Copy Generated Code
         run: cp -R autocoder-artifact/* .
 
@@ -73,7 +68,8 @@ jobs:
       - name: Commit Generated Code
         run: |
           git checkout -b autocoder-branch-${{ github.event.issue.number }}
-          git add .
+          git add -A
+          git status
           git commit -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
           git push origin autocoder-branch-${{ github.event.issue.number }}
       
