@@ -49,6 +49,11 @@ jobs:
       - name: List Artifact Contents
         run: ls -R autocoder-artifact/
 
+      - name: Clean Up Previously Generated Files
+        run: |
+          rm -f src/main.py || true
+          rm -rf autocoder-bot || true
+
       - name: Copy Generated Code
         run: cp -R autocoder-artifact/* .
 
