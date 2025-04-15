@@ -70,7 +70,7 @@ jobs:
       - name: Commit Generated Code
         run: |
           # Create or update the branch with a forced reset
-          git checkout -B autocoder-branch-${{ github.event.issue.number }}
+          git checkout -b autocoder-branch-${{ github.event.issue.number }}
           # Add only the dedicated folder (and any other changes if needed)
           git add autocoder-generated
           git status
