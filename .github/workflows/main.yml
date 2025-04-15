@@ -44,31 +44,35 @@ jobs:
       - name: List Artifact Contents
         run: ls -R autocoder-artifact/
 
-      - name: Copy Generated Code
-        run: cp -R autocoder-artifact/* .
+      # Instead of copying to the root directory, copy to a dedicated folder so that the diff is clear.
+      - name: Copy Generated Code to a dedicated folder
+        run: |
+          mkdir -p autocoder-generated
+          cp -R autocoder-artifact/* autocoder-generated/
 
-      - name: Debug - List Copied Files
-        run: ls -R .
+      - name: Debug - List Copied Files in autocoder-generated
+        run: ls -R autocoder-generated
 
-      # Add a step to force a change so that diff is always non-empty.
+      # Insert a file into the dedicated folder with current timestamp to force a change.
       - name: Force a change for PR detection
         run: |
-          echo "// Force change: $(date)" > force_change.txt
+          echo "// Force change: $(date)" > autocoder-generated/force_change.txt
 
       - name: Configure Git
         run: |
           git config --global user.name "autocoder-bot"
           git config --global user.email "actions@github.com"
 
-      - name: Debug Git Status
+      - name: Debug Git Status Before Commit
         run: |
           git status
-          git add .
 
       - name: Commit Generated Code
         run: |
+          # Create or update the branch with a forced reset
           git checkout -B autocoder-branch-${{ github.event.issue.number }}
-          git add -A
+          # Add only the dedicated folder (and any other changes if needed)
+          git add autocoder-generated
           git status
           git commit -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
           git push -f origin autocoder-branch-${{ github.event.issue.number }}
