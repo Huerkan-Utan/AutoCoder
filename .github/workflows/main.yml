@@ -7,11 +7,6 @@ on:
 jobs:
   access_issue_info:
     if: contains(github.event.issue.labels.*.name, 'autocoder-bot')
-    #if: >-
-    #  github.event.action == 'opened' || 
-    #  github.event.action == 'reopened' || 
-    #  (github.event.action == 'labeled' && github.event.label.name == 'autocoder-bot')
-    #if: ${{ (github.event.action == 'labeled' && github.event.label.name == 'autocoder-bot') || (github.event.issue.labels && contains(github.event.issue.labels.*.name, 'autocoder-bot')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -54,7 +49,11 @@ jobs:
 
       - name: Debug - List Copied Files
         run: ls -R .
-      
+
+      # Add a step to force a change so that diff is always non-empty.
+      - name: Force a change for PR detection
+        run: echo "// Force change: $(date)" > force_change.txt
+
       - name: Configure Git
         run: |
           git config --global user.name "autocoder-bot"
