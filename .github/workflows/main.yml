@@ -69,12 +69,16 @@ jobs:
 
       - name: Commit Generated Code
         run: |
-          # Create or update the branch with a forced reset
-          git checkout -b autocoder-branch-${{ github.event.issue.number }}
-          # Add only the dedicated folder (and any other changes if needed)
+          # Create or update the branch
+          git checkout -B autocoder-branch-${{ github.event.issue.number }}
+          # Stage everything in the dedicated folder
           git add autocoder-generated
           git status
-          git commit -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
+          # Commit, explicitly setting the author
+          git commit \
+            --author="autocoder-bot <actions@github.com>" \
+            -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
+          # Force-push to overwrite any existing branch
           git push -f origin autocoder-branch-${{ github.event.issue.number }}
       
       - name: Debug - Final Git Status
