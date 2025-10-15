@@ -35,13 +35,13 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: "Checkout repository"
+    - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: "Ensure script is executable"
+    - name: Ensure script is executable
       run: chmod +x ${{ inputs.SCRIPT_PATH }}
 
-    - name: "Run AutoCoder Script"
+    - name: Run AutoCoder Script
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
         REPOSITORY: ${{ inputs.REPOSITORY }}
@@ -49,92 +49,37 @@ runs:
         OPENAI_API_KEY: ${{ inputs.OPENAI_API_KEY }}
       run: ${{ inputs.SCRIPT_PATH }} "$GITHUB_TOKEN" "${{ inputs.REPOSITORY }}" "${{ inputs.ISSUE_NUMBER }}" "$OPENAI_API_KEY"
 
-    - name: "Upload generated code artifact"
+    - name: Upload generated code artifact
       uses: actions/upload-artifact@v4
       with:
         name: autocoder-artifact
         path: autocoder-bot/
 
-    - name: "Download artifact"
+    - name: Download artifact
       uses: actions/download-artifact@v4
       with:
         name: autocoder-artifact
         path: autocoder-artifact/
 
-    - name: "Prepare generated code"
+    - name: Prepare generated code
       run: |
         mkdir -p autocoder-generated
         cp -R autocoder-artifact/* autocoder-generated/
         echo "// Force change: $(date)" > autocoder-generated/force_change.txt
 
-    - name: "Configure credentials and commit files"
-      run: |
-        git config --local user.email "actions@github.com"
-        git config --local user.name "autocoder-bot"
-        git add .
-        git commit -m "Autocoder generated code for issue #${{ inputs.ISSUE_NUMBER }}"
-        git push -f origin autocoder-branch-${{ inputs.ISSUE_NUMBER }}
-
-    - name: "Create Pull Request"
-      id: pr
-      uses: peter-evans/create-pull-request@v5
-      with:
-        title: "Autocoder generated code for issue #${{ inputs.ISSUE_NUMBER }}"
-        branch: "autocoder-branch-${{ inputs.ISSUE_NUMBER }}"
-        base: main
-        labels: ${{ inputs.LABEL }}
-        author: "autocoder-bot <actions@github.com>"
-        committer: "autocoder-bot <actions@github.com>"
-
-    - name: "Set output PR URL"
-      run: echo "PULL_REQUEST_URL=${{ steps.pr.outputs.pull-request-url }}" >> $GITHUB_OUTPUT
-  using: "composite"
-  steps:
-    - name: "Checkout repository"
-      uses: actions/checkout@v3
-
-    - name: "Ensure script is executable"
-      run: chmod +x ${{ inputs.SCRIPT_PATH }}
-
-    - name: "Run AutoCoder Script"
-      env:
-        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
-        REPOSITORY: ${{ inputs.REPOSITORY }}
-        ISSUE_NUMBER: ${{ inputs.ISSUE_NUMBER }}
-        OPENAI_API_KEY: ${{ inputs.OPENAI_API_KEY }}
-      run: ${{ inputs.SCRIPT_PATH }} "$GITHUB_TOKEN" "${{ inputs.REPOSITORY }}" "${{ inputs.ISSUE_NUMBER }}" "$OPENAI_API_KEY"
-
-    - name: "Upload generated code artifact"
-      uses: actions/upload-artifact@v4
-      with:
-        name: autocoder-artifact
-        path: autocoder-bot/
-
-    - name: "Download artifact"
-      uses: actions/download-artifact@v4
-      with:
-        name: autocoder-artifact
-        path: autocoder-artifact/
-
-    - name: "Prepare generated code"
-      run: |
-        mkdir -p autocoder-generated
-        cp -R autocoder-artifact/* autocoder-generated/
-        echo "// Force change: $(date)" > autocoder-generated/force_change.txt
-
-    - name: "Configure Git user"
+    - name: Configure Git user
       run: |
         git config --local user.name "autocoder-bot"
         git config --local user.email "actions@github.com"
 
-    - name: "Commit and push changes"
+    - name: Commit and push changes
       run: |
         git checkout -B autocoder-branch-${{ inputs.ISSUE_NUMBER }}
         git add autocoder-generated
         git commit --author="autocoder-bot <actions@github.com>" -m "Autocoder generated code for issue #${{ inputs.ISSUE_NUMBER }}"
         git push -f origin autocoder-branch-${{ inputs.ISSUE_NUMBER }}
 
-    - name: "Create Pull Request"
+    - name: Create Pull Request
       id: pr
       uses: peter-evans/create-pull-request@v5
       with:
@@ -145,5 +90,5 @@ runs:
         author: "autocoder-bot <actions@github.com>"
         committer: "autocoder-bot <actions@github.com>"
 
-    - name: "Set output PR URL"
+    - name: Set output PR URL
       run: echo "PULL_REQUEST_URL=${{ steps.pr.outputs.pull-request-url }}" >> $GITHUB_OUTPUT
