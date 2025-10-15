@@ -5,7 +5,7 @@ on:
     types: [opened, reopened, labeled]
 
 jobs:
-  access_issue_info:
+  autocoder:
     if: contains(github.event.issue.labels.*.name, 'autocoder-bot')
     runs-on: ubuntu-latest
     permissions:
@@ -14,82 +14,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Debug - List Repo Contents
-        run: ls -R
-
-      - name: Make script executable
-        run: chmod +x ./scripts/script.sh
-      
-      - name: Run AutoCoder Script
-        env:
+      - name: Run AutoCoder Reusable Action
+        uses: hurkanutan/AutoCoder@v1
+        with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           REPOSITORY: ${{ github.repository }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-        run: ./scripts/script.sh "$GITHUB_TOKEN" "$REPOSITORY" "$ISSUE_NUMBER" "$OPENAI_API_KEY"
-
-      - name: Upload Generated Code as Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: autocoder-artifact
-          path: autocoder-bot/
-      
-      - name: Download the Artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: autocoder-artifact
-          path: autocoder-artifact/
-
-      - name: List Artifact Contents
-        run: ls -R autocoder-artifact/
-
-      # Instead of copying to the root directory, copy to a dedicated folder so that the diff is clear.
-      - name: Copy Generated Code to a dedicated folder
-        run: |
-          mkdir -p autocoder-generated
-          cp -R autocoder-artifact/* autocoder-generated/
-
-      - name: Debug - List Copied Files in autocoder-generated
-        run: ls -R autocoder-generated
-
-      # Insert a file into the dedicated folder with current timestamp to force a change.
-      - name: Force a change for PR detection
-        run: |
-          echo "// Force change: $(date)" > autocoder-generated/force_change.txt
-
-      - name: Configure Git
-        run: |
-          git config --global user.name "autocoder-bot"
-          git config --global user.email "actions@github.com"
-
-      - name: Debug Git Status Before Commit
-        run: |
-          git status
-
-      - name: Commit Generated Code
-        run: |
-          # Create or update the branch
-          git checkout -B autocoder-branch-${{ github.event.issue.number }}
-          # Stage everything in the dedicated folder
-          git add autocoder-generated
-          git status
-          # Commit, explicitly setting the author
-          git commit \
-            --author="autocoder-bot <actions@github.com>" \
-            -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
-          # Force-push to overwrite any existing branch
-          git push -f origin autocoder-branch-${{ github.event.issue.number }}
-      
-      - name: Debug - Final Git Status
-        run: git status
-      
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          title: "Autocoder generated code for issue #${{ github.event.issue.number }}"
-          branch: autocoder-branch-${{ github.event.issue.number }}
-          base: main
-          labels: autocoder-bot
-          author: "autocoder-bot <actions@github.com>"
-          committer: "autocoder-bot <actions@github.com>"
+          LABEL: "autocoder-bot"
