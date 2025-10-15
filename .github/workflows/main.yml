@@ -19,7 +19,7 @@ jobs:
 
       # Run your reusable action to generate code
       - name: Run AutoCoder Reusable Action
-        uses: hurkanutan/AutoCoder@v1
+        uses: uses: Huerkan-Utan/AutoCoder@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
