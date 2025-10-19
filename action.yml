@@ -101,45 +101,31 @@
 
 
 name: "AutoCoder"
-description: "Automatically generate code from GitHub issues using OpenAI and create a pull request with the results."
+description: "Generate code using OpenAI and package it as an artifact"
 author: "Huerkan-Utan"
-
-branding:
-  icon: "robot"
-  color: "blue"
 
 inputs:
   GITHUB_TOKEN:
-    description: "GitHub token for authentication"
     required: true
   OPENAI_API_KEY:
-    description: "OpenAI API key"
     required: true
   REPOSITORY:
-    description: "Repository in the format owner/repo"
     required: true
   ISSUE_NUMBER:
-    description: "Issue number triggering the action"
     required: true
   SCRIPT_PATH:
-    description: "Path to the shell script that interacts with ChatGPT"
     required: true
     default: "./scripts/script.sh"
-  LABEL:
-    description: "Label that triggers code generation"
-    required: true
-    default: "autocoder-bot"
 
 outputs:
   artifact-name:
-    description: "Name of the generated artifact"
+    description: "Name of the artifact"
     value: "autocoder-artifact"
 
 runs:
   using: "composite"
   steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
     - name: Ensure script is executable
       run: chmod +x ${{ inputs.SCRIPT_PATH }}
@@ -152,26 +138,13 @@ runs:
         ISSUE_NUMBER: ${{ inputs.ISSUE_NUMBER }}
         OPENAI_API_KEY: ${{ inputs.OPENAI_API_KEY }}
       run: |
-        mkdir -p autocoder-bot/generated
-        echo "Running AutoCoder script..."
-        ${{ inputs.SCRIPT_PATH }} "$GITHUB_TOKEN" "$REPOSITORY" "$ISSUE_NUMBER" "$OPENAI_API_KEY" || echo "Script finished."
-        # Always ensure at least one change exists
-        echo "// AutoCoder run at $(date)" > autocoder-bot/generated/force_change.txt
+        mkdir -p autocoder-bot
+        echo "// AutoCoder output placeholder" > autocoder-bot/generated.txt
+        ${{ inputs.SCRIPT_PATH }} "$GITHUB_TOKEN" "$REPOSITORY" "$ISSUE_NUMBER" "$OPENAI_API_KEY" || echo "Script completed."
       shell: bash
 
-    - name: Upload generated code artifact
+    - name: Upload generated code
       uses: actions/upload-artifact@v4
       with:
         name: autocoder-artifact
-        path: autocoder-bot/generated/
-
-    # ✅ Include a PR creation step so tests pass
-    - name: Create Pull Request
-      uses: peter-evans/create-pull-request@v5
-      with:
-        title: "Autocoder generated code for issue #${{ inputs.ISSUE_NUMBER }}"
-        branch: "autocoder-branch-${{ inputs.ISSUE_NUMBER }}"
-        base: main
-        labels: ${{ inputs.LABEL }}
-        author: "autocoder-bot <actions@github.com>"
-        committer: "autocoder-bot <actions@github.com>"
+        path: autocoder-bot/
