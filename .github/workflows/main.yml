@@ -1,3 +1,71 @@
+#name: Auto_Coder
+#
+#on:
+#  issues:
+#    types: [opened, reopened, labeled]
+#
+#jobs:
+#  autocoder:
+#    if: contains(github.event.issue.labels.*.name, 'autocoder-bot')
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: write
+#      pull-requests: write
+#    steps:
+#      - name: Checkout repository
+#        uses: actions/checkout@v3
+#        with:
+#          fetch-depth: 0
+#
+#      # Run the reusable action to generate files (action still used)
+#      - name: Run AutoCoder Reusable Action
+#        uses: Huerkan-Utan/AutoCoder@v1
+#        with:
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+#          REPOSITORY: ${{ github.repository }}
+#          ISSUE_NUMBER: ${{ github.event.issue.number }}
+#          LABEL: "autocoder-bot"
+#
+#      # --- The test expects these steps to be present directly in the job ---
+#      - name: Configure Git
+#        run: |
+#          git config --global user.name "autocoder-bot"
+#          git config --global user.email "actions@github.com"
+#        shell: bash
+#
+#      - name: Debug Git Status Before Commit
+#        run: git status
+#        shell: bash
+#
+#      - name: Commit Generated Code
+#        run: |
+#          # Create or update the branch
+#          git checkout -B autocoder-branch-${{ github.event.issue.number }}
+#          # Stage everything in the dedicated folder
+#          git add autocoder-generated
+#          git status
+#          # Commit, explicitly setting the author
+#          git commit --author="autocoder-bot <actions@github.com>" -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
+#          # Force-push to overwrite any existing branch
+#          git push -f origin autocoder-branch-${{ github.event.issue.number }}
+#        shell: bash
+#
+#      - name: Debug - Final Git Status
+#        run: git status
+#        shell: bash
+#
+#      - name: Create Pull Request
+#        uses: peter-evans/create-pull-request@v5
+#        with:
+#          title: "Autocoder generated code for issue #${{ github.event.issue.number }}"
+#          branch: autocoder-branch-${{ github.event.issue.number }}
+#          base: main
+#          labels: autocoder-bot
+#          author: "autocoder-bot <actions@github.com>"
+#          committer: "autocoder-bot <actions@github.com>"
+
+
 name: Auto_Coder
 
 on:
@@ -17,8 +85,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      # Run the reusable action to generate files (action still used)
+      # Run the reusable AutoCoder action
       - name: Run AutoCoder Reusable Action
+        id: autocoder
         uses: Huerkan-Utan/AutoCoder@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -27,7 +96,14 @@ jobs:
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           LABEL: "autocoder-bot"
 
-      # --- The test expects these steps to be present directly in the job ---
+      # ✅ Download the artifact generated inside the composite action
+      - name: Download generated artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ steps.autocoder.outputs.artifact-name }}
+          path: autocoder-generated
+
+      # Git configuration
       - name: Configure Git
         run: |
           git config --global user.name "autocoder-bot"
@@ -40,14 +116,10 @@ jobs:
 
       - name: Commit Generated Code
         run: |
-          # Create or update the branch
           git checkout -B autocoder-branch-${{ github.event.issue.number }}
-          # Stage everything in the dedicated folder
           git add autocoder-generated
           git status
-          # Commit, explicitly setting the author
           git commit --author="autocoder-bot <actions@github.com>" -m "Autocoder generated code for issue #${{ github.event.issue.number }}"
-          # Force-push to overwrite any existing branch
           git push -f origin autocoder-branch-${{ github.event.issue.number }}
         shell: bash
 
